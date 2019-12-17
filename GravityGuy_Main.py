@@ -10,7 +10,6 @@ GREEN = (0, 255, 0)
 BLUE = (100, 100, 255)
 char = [[pg.image.load("char_0.png"), pg.image.load("char_01.png")],
         [pg.image.load("char_1.png"), pg.image.load("char_11.png")]]
-spike = pg.image.load("spike.png")
 bg = pg.image.load("bg.png")
 bg_block = pg.image.load("bgblock1.png")
 display_width, display_height = 800, 600
@@ -40,7 +39,9 @@ class Player:  # Rambo
             self.i = 1
 
     def render(self):
+        global char_mask
         ROOT.blit(char[self.i][self.j], (self.x_co, self.y_co))
+        char_mask = pg.mask.from_surface(char[self.i][self.j])
         if char_walk_index in range(0, 5) or char_walk_index in range(10, 15) or char_walk_index in range(20, 25):
             self.j = 1
         else:
@@ -56,32 +57,35 @@ class Player:  # Rambo
         """
         return pg.mask.from_surface(char[self.i][self.j])'''
 
-
-def collide(p1, rand, obstacle_x,OVER):
+'''
+def collide(p1, rand, obstacle_x):
     if obstacle_x == 180 or obstacle_x == 220:
         if rand[0] == 1:  # 1
             if rand[1] == 1:  # UP
                 ob_y_co = 200
                 if ob_y_co <= p1.hitbox[1] <= ob_y_co + 10:
-                    OVER = False
                     print("HIT1")
+                    return True
             else:  # DOWN
                 ob_y_co = 450
                 if ob_y_co - 10 <= p1.y_co + 40 <= ob_y_co:
-                    OVER = False
                     print("HIT2")
+                    return True
     if obstacle_x == 200:
         if rand[0] == 1:  # 1
             if rand[1] == 1:  # UP
                 ob_y_co = 200
                 if ob_y_co <= p1.hitbox[1] <= ob_y_co + 40:
-                    OVER = False
                     print("HIT3")
+                    return True
             else:  # DOWN
                 ob_y_co = 450
-                if ob_y_co - 40 <= p1.y_co + 40  <= ob_y_co:
-                    OVER = False
+                if ob_y_co - 40 <= p1.y_co + 40 <= ob_y_co:
                     print("HIT4")
+                    return True
+    else:
+        return False
+'''
 
 
 ROOT = pg.display.set_mode((display_width, display_height))
@@ -89,12 +93,13 @@ ROOT = pg.display.set_mode((display_width, display_height))
 
 def main_loop():
     # Game Loop Variables
-    global restart, char_walk_index,OVER
+    global restart, char_walk_index, OVER
     p1 = Player()
     clock = pg.time.Clock()
     BG_VEL = 10
     bg_X, char_walk_index = 0, 0
     # obstacle Part
+
     obstacle_x = 800
     obstacle_x1 = 1000
     obstacle_x2 = 1200
@@ -143,10 +148,15 @@ def main_loop():
         obstacle_x1 -= BG_VEL
         obstacle_x2 -= BG_VEL
         obstacle_x3 -= BG_VEL
-        collide(p1, rand1, obstacle_x,OVER)
-        collide(p1, rand2, obstacle_x1,OVER)
-        collide(p1, rand3, obstacle_x2,OVER)
-        collide(p1, rand4, obstacle_x3,OVER)
+        '''if not OVER:
+            OVER = collide(p1, rand1, obstacle_x)
+        if not OVER:
+            OVER = collide(p1, rand2, obstacle_x1)
+        if not OVER:
+            OVER = collide(p1, rand3, obstacle_x2)
+        if not OVER:
+            OVER = collide(p1, rand4, obstacle_x3)'''
+
         if obstacle_x < 0:
             obstacle_x = 800
             rand1 = ob.random()

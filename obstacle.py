@@ -1,28 +1,30 @@
 import pygame as pg
 import random as rand
 
-spike = pg.image.load("spike.png")
-block = pg.image.load("block.png")
+obstacle_list = [pg.image.load("spike_s.png"), pg.image.load("spike_l.png")]
 
 
 def random():
-    obstacle_no = rand.randrange(1, 3)
+    obstacle_no = rand.randrange(0, 2)
     obstacle_side = rand.randrange(0, 2)
     return obstacle_no, obstacle_side
 
 
 def rand_obstacle(ROOT, obstacle_x, rand):
     if rand[1] == 0:
-        side = "DOWN"
+        tilt = 0
     else:
-        side = "UP"
-
+        tilt = 180
+        ob_y = 200
+    if rand[0] == 0:
+        if rand[1] == 0:
+            ob_y = 390
+        blitRotateCenter(ROOT, obstacle_list[rand[0]], (obstacle_x, ob_y), tilt)
     if rand[0] == 1:
-        simple_spike(ROOT, obstacle_x, side=side)
-        return obstacle_x
-    elif rand[0] == 2:
-        big_spike(ROOT, obstacle_x, side=side)
-        return obstacle_x
+        if rand[1] == 0:
+            ob_y = 350
+        blitRotateCenter(ROOT, obstacle_list[rand[0]], (obstacle_x, ob_y), tilt)
+    return obstacle_x
 
 
 def blitRotateCenter(surf, image, topleft, angle):
@@ -32,6 +34,7 @@ def blitRotateCenter(surf, image, topleft, angle):
     surf.blit(rotated_image, new_rect.topleft)
 
 
+''' s
 def simple_spike(ROOT, obstacle_x, side="DOWN"):  # 1
     if side == "UP":
         obstacle_y = 200
@@ -69,3 +72,4 @@ def big_spike(ROOT, obstacle_x, side="DOWN"):  # 2
             obstacle_y -= 20
         blitRotateCenter(ROOT, spike, (obstacle_x, obstacle_y), tilt)  # spike
     return obstacle_x
+'''

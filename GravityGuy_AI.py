@@ -135,6 +135,7 @@ def main_loop(genomes, config):
     nets = []
     ge = []
     Players = []
+    ob.reset_r()
 
     for genome_id, genome in genomes:
         net = neat.nn.FeedForwardNetwork.create(genome, config)
@@ -148,7 +149,7 @@ def main_loop(genomes, config):
     # p1 = Player()
 
     clock = pg.time.Clock()
-    BG_VEL = 20
+    BG_VEL = 10
     bg_X, char_walk_index = 0, 0
     Score = 0
 

@@ -4,6 +4,7 @@ import random as rand
 obstacle_list = [pg.image.load("spike_s.png"), pg.image.load("spike_l.png"),
                  pg.image.load("spike_xl.png"), pg.image.load("spike_double.png")]
 
+r = 0
 
 def ob_yco(rand):
     if rand[0] == 0:  # render obstacle
@@ -54,12 +55,22 @@ def neat_yco(rand):
 
 
 def random(ran=(0, 0)):
+    global r
+    '''
+    Comment line below to enable randomness
+    '''
+    rand.seed(100 + r)
+    r += 1
     if ran[0] > 2:
         obstacle_no = rand.randrange(0, 2)
     else:
         obstacle_no = rand.randrange(0, 3)
     obstacle_side = rand.randrange(0, 2)
     return obstacle_no, obstacle_side
+
+def reset_r():
+    global r
+    r = 0
 
 
 def get_ob_mask(rand, no):

@@ -1,10 +1,12 @@
 import pygame as pg
 import obstacle as ob
 import neat
+import pickle
 import os
 
 pg.init()
 # Program Constants
+
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -17,11 +19,17 @@ bg_block = pg.image.load("bgblock1.png")
 display_width, display_height = 800, 600
 block_thickness = 40
 char_VEL = 21
+HIGH_SCORE = 0
+
+try:
+    with open('high_score.pickle', 'rb') as f:
+        HIGH_SCORE = pickle.load(f)
+except (OSError, IOError) as e:
+    HIGH_SCORE = 0        
 
 restart = True
 FPS = 30  # if u want to change this u have to change values in Player.render too
 i = 0
-
 
 def blit_msg(txt, color, size, pos):
     FONT = pg.font.Font("freesansbold.ttf", size)
@@ -107,7 +115,7 @@ ROOT = pg.display.set_mode((display_width, display_height))
 
 def main_loop():
     # Game Loop Variables
-    global restart, char_walk_index, OVER
+    global restart, char_walk_index, OVER, HIGH_SCORE
     p1 = Player()
     clock = pg.time.Clock()
     BG_VEL = 20
@@ -186,6 +194,10 @@ def main_loop():
         if hit:
             OVER = True
             inOVER = False
+            if Score > HIGH_SCORE:
+                HIGH_SCORE = Score
+                with open('high_score.pickle', 'wb') as f:
+                    pickle.dump(Score, f)
             while not inOVER:
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
@@ -194,9 +206,10 @@ def main_loop():
                     if event.type == pg.KEYDOWN:
                         inOVER = True
                 ROOT.fill(WHITE)
-                blit_msg("!!!YOU LOST!!!", RED, 90, (85, 250))
-                blit_msg("Press any Key to restart", BLACK, 32, (240, 350))
-                blit_msg("Your Score : " + str(Score), BLACK, 32, (240, 100))
+                blit_msg("    YOU LOST!", RED, 90, (85, 250))
+                blit_msg("Press any Key to restart", BLACK, 32, (240, 350)) 
+                blit_msg("     High Score : " + str(HIGH_SCORE), BLACK, 32, (240, 40))
+                blit_msg("     Your Score : " + str(Score), BLACK, 32, (240, 100))
                 pg.display.update()
 
         '''if not OVER:
@@ -215,7 +228,7 @@ def main_loop():
         if obstacle_x2 < -30:
             obstacle_x2 = give_block_dist(rand1)
             rand2 = ob.random(ran=rand1)
-            Score += 1
+            Score +=  1
         if obstacle_x3 < -30:
             obstacle_x3 = give_block_dist(rand2)
             rand3 = ob.random(ran=rand2)
@@ -240,38 +253,3 @@ while True:
         break
 pg.quit()
 quit()
-
-
-def run(config_file):
-    """
-    runs the NEAT algorithm to train a neural network to play flappy bird.
-    :param config_file: location of config file
-    :return: None
-    """
-    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                                neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                                config_file)
-
-    # Create the population, which is the top-level object for a NEAT run.
-    p = neat.Population(config)
-
-    # Add a stdout reporter to show progress in the terminal.
-    p.add_reporter(neat.StdOutReporter(True))
-    stats = neat.StatisticsReporter()
-    p.add_reporter(stats)
-    # p.add_reporter(neat.Checkpointer(5))
-
-    # Run for up to 50 generations.
-    winner = p.run(main_loop, 50)
-
-    # show final stats
-    print('\nBest genome:\n{!s}'.format(winner))
-
-
-if __name__ == '__main__':
-    # Determine path to configuration file. This path manipulation is
-    # here so that the script will run successfully regardless of the
-    # current working directory.
-    local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, 'neat-config.txt')
-    run(config_path)

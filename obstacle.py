@@ -59,7 +59,7 @@ def random(ran=(0, 0)):
     '''
     Comment line below to enable randomness
     '''
-    rand.seed(100 + r)
+    rand.seed(150 + r)
     r += 1
     if ran[0] > 2:
         obstacle_no = rand.randrange(0, 2)

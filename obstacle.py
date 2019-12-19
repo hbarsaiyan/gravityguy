@@ -1,29 +1,101 @@
 import pygame as pg
 import random as rand
 
-obstacle_list = [pg.image.load("spike_s.png"), pg.image.load("spike_l.png")]
+obstacle_list = [pg.image.load("spike_s.png"), pg.image.load("spike_l.png"),
+                 pg.image.load("spike_xl.png"), pg.image.load("spike_double.png")]
 
 
-def random():
-    obstacle_no = rand.randrange(0, 2)
+def ob_yco(rand):
+    if rand[0] == 0:  # render obstacle
+        if rand[1] == 0:
+            ob_y = 390
+        else:
+            ob_y = 200
+    elif rand[0] == 1:
+        if rand[1] == 0:
+            ob_y = 350
+        else:
+            ob_y = 200
+    elif rand[0] == 2:
+        if rand[1] == 0:
+            ob_y = 310
+        else:
+            ob_y = 200
+    elif rand[0] == 3:
+        if rand[1] == 0:
+            ob_y = 200
+        else:
+            ob_y = 200
+    return ob_y
+
+
+def neat_yco(rand):
+    if rand[0] == 0:  # render obstacle
+        if rand[1] == 0:
+            ob_y = 390
+        else:
+            ob_y = 260
+    elif rand[0] == 1:
+        if rand[1] == 0:
+            ob_y = 350
+        else:
+            ob_y = 300
+    elif rand[0] == 2:
+        if rand[1] == 0:
+            ob_y = 310
+        else:
+            ob_y = 340
+    elif rand[0] == 3:
+        if rand[1] == 0:
+            ob_y = 200
+        else:
+            ob_y = 200
+    return ob_y
+
+
+def random(ran=(0, 0)):
+    if ran[0] > 2:
+        obstacle_no = rand.randrange(0, 2)
+    else:
+        obstacle_no = rand.randrange(0, 3)
     obstacle_side = rand.randrange(0, 2)
     return obstacle_no, obstacle_side
 
 
-def rand_obstacle(ROOT, obstacle_x, rand):
+def get_ob_mask(rand, no):
     if rand[1] == 0:
+        if no == 1:
+            ob_mask = pg.mask.from_surface(obstacle_list[rand[0]])
+        elif no == 2:
+            ob_mask = pg.mask.from_surface(obstacle_list[rand[0]])
+        elif no == 3:
+            ob_mask = pg.mask.from_surface(obstacle_list[rand[0]])
+        elif no == 4:
+            ob_mask = pg.mask.from_surface(obstacle_list[rand[0]])
+        return ob_mask
+    if rand[1] == 1:
+        rotated_image = pg.transform.rotate(obstacle_list[rand[0]], 180)
+        if no == 1:
+            ob_mask = pg.mask.from_surface(rotated_image)
+        elif no == 2:
+            ob_mask = pg.mask.from_surface(rotated_image)
+        elif no == 3:
+            ob_mask = pg.mask.from_surface(rotated_image)
+        elif no == 4:
+            ob_mask = pg.mask.from_surface(rotated_image)
+        return ob_mask
+
+
+def rand_obstacle(ROOT, obstacle_x, rand):
+    if rand[1] == 0:  # obstacle side
         tilt = 0
     else:
         tilt = 180
-        ob_y = 200
-    if rand[0] == 0:
-        if rand[1] == 0:
-            ob_y = 390
-        blitRotateCenter(ROOT, obstacle_list[rand[0]], (obstacle_x, ob_y), tilt)
-    if rand[0] == 1:
-        if rand[1] == 0:
-            ob_y = 350
-        blitRotateCenter(ROOT, obstacle_list[rand[0]], (obstacle_x, ob_y), tilt)
+
+    # render obstacle
+
+    ob_y = ob_yco(rand)
+    blitRotateCenter(ROOT, obstacle_list[rand[0]], (obstacle_x, ob_y), tilt)
     return obstacle_x
 
 

@@ -1,5 +1,7 @@
 import pygame as pg
 import obstacle as ob
+import neat
+import os
 
 pg.init()
 # Program Constants
@@ -21,6 +23,20 @@ FPS = 30  # if u want to change this u have to change values in Player.render to
 i = 0
 
 
+def blit_msg(txt, color, size, pos):
+    FONT = pg.font.Font("freesansbold.ttf", size)
+    text = FONT.render(txt, True, color)
+    ROOT.blit(text, (pos[0], pos[1]))
+
+
+def give_block_dist(rand):
+    if rand[0] == 2:
+        block_spawn_dist = 1000
+    else:
+        block_spawn_dist = 1000
+    return block_spawn_dist
+
+
 class Player:  # Rambo
     def __init__(self):
         self.x_co = 162
@@ -28,7 +44,7 @@ class Player:  # Rambo
         self.vel = 0
         self.i = 0
         self.j = 0
-        self.hitbox = (self.x_co + 16, self.y_co, 22, 37)
+        self.char_mask = None
 
     def change_gravity(self):
         if self.y_co == display_height / 3:
@@ -39,14 +55,12 @@ class Player:  # Rambo
             self.i = 1
 
     def render(self):
-        global char_mask
         ROOT.blit(char[self.i][self.j], (self.x_co, self.y_co))
-        char_mask = pg.mask.from_surface(char[self.i][self.j])
+        self.char_mask = pg.mask.from_surface(char[self.i][self.j])
         if char_walk_index in range(0, 5) or char_walk_index in range(10, 15) or char_walk_index in range(20, 25):
             self.j = 1
         else:
             self.j = 0
-        self.hitbox = (self.x_co + 16, self.y_co + 3, 22, 37)
 
     def move(self):
         self.y_co += self.vel
@@ -56,6 +70,7 @@ class Player:  # Rambo
         gets the mask for the current image of the player
         """
         return pg.mask.from_surface(char[self.i][self.j])'''
+
 
 '''
 def collide(p1, rand, obstacle_x):
@@ -87,7 +102,6 @@ def collide(p1, rand, obstacle_x):
         return False
 '''
 
-
 ROOT = pg.display.set_mode((display_width, display_height))
 
 
@@ -96,19 +110,22 @@ def main_loop():
     global restart, char_walk_index, OVER
     p1 = Player()
     clock = pg.time.Clock()
-    BG_VEL = 10
+    BG_VEL = 20
     bg_X, char_walk_index = 0, 0
-    # obstacle Part
+    Score = 0
 
-    obstacle_x = 800
+    # obstacle Part
     obstacle_x1 = 1000
-    obstacle_x2 = 1200
-    obstacle_x3 = 1400
+    obstacle_x2 = 1250
+    obstacle_x3 = 1500
+    obstacle_x4 = 1750
     rand1 = ob.random()
     rand2 = ob.random()
     rand3 = ob.random()
     rand4 = ob.random()
+
     # Game Loop
+    hit = False
     OVER = False
     while not OVER:
         # Event Loop
@@ -126,13 +143,14 @@ def main_loop():
             p1.vel = 0
 
         # Rendering Section
-        ROOT.fill((13, 13, 13))
+        ROOT.fill(BLACK)
         pg.draw.rect(ROOT, BLACK, (0, 0, display_width, display_height / 3))
         pg.draw.rect(ROOT, BLACK, (0, display_height / 3 + 250, display_width, display_height / 3))
+        blit_msg("Score : " + str(Score), WHITE, 32, (0, 0))
 
         if bg_X >= -20:  # Background Render + animation
             ROOT.blit(bg_block, (bg_X, display_height / 3 - 20))
-            bg_X -= BG_VEL
+            bg_X -= 0
 
         else:
             ROOT.blit(bg_block, (bg_X, display_height / 3 - 20))
@@ -140,14 +158,47 @@ def main_loop():
 
         ROOT.blit(bg, (0, display_height / 3 - 20))
         p1.render()  # Player Render
-        obstacle_x = ob.rand_obstacle(ROOT, obstacle_x, rand1)
-        obstacle_x1 = ob.rand_obstacle(ROOT, obstacle_x1, rand2)
-        obstacle_x2 = ob.rand_obstacle(ROOT, obstacle_x2, rand3)
-        obstacle_x3 = ob.rand_obstacle(ROOT, obstacle_x3, rand4)
-        obstacle_x -= BG_VEL
+
+        obstacle_x1 = ob.rand_obstacle(ROOT, obstacle_x1, rand1)  # Obstacle Motion + Render
+        obstacle_x2 = ob.rand_obstacle(ROOT, obstacle_x2, rand2)
+        obstacle_x3 = ob.rand_obstacle(ROOT, obstacle_x3, rand3)
+        obstacle_x4 = ob.rand_obstacle(ROOT, obstacle_x4, rand4)
         obstacle_x1 -= BG_VEL
         obstacle_x2 -= BG_VEL
         obstacle_x3 -= BG_VEL
+        obstacle_x4 -= BG_VEL
+
+        # collision DETECTION
+        off1 = (round(obstacle_x1 - p1.x_co), round(ob.ob_yco(rand1) - p1.y_co))
+        off2 = (round(obstacle_x2 - p1.x_co), round(ob.ob_yco(rand2) - p1.y_co))
+        off3 = (round(obstacle_x3 - p1.x_co), round(ob.ob_yco(rand3) - p1.y_co))
+        off4 = (round(obstacle_x4 - p1.x_co), round(ob.ob_yco(rand4) - p1.y_co))
+        if not hit:
+            mask = ob.get_ob_mask(rand1, 1)
+            hit = p1.char_mask.overlap(mask, off1)
+        if not hit:
+            hit = p1.char_mask.overlap(ob.get_ob_mask(rand2, 2), off2)
+        if not hit:
+            hit = p1.char_mask.overlap(ob.get_ob_mask(rand3, 3), off3)
+        if not hit:
+            hit = p1.char_mask.overlap(ob.get_ob_mask(rand4, 4), off4)
+
+        if hit:
+            OVER = True
+            inOVER = False
+            while not inOVER:
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        inOVER = True
+                        restart = False
+                    if event.type == pg.KEYDOWN:
+                        inOVER = True
+                ROOT.fill(WHITE)
+                blit_msg("!!!YOU LOST!!!", RED, 90, (85, 250))
+                blit_msg("Press any Key to restart", BLACK, 32, (240, 350))
+                blit_msg("Your Score : " + str(Score), BLACK, 32, (240, 100))
+                pg.display.update()
+
         '''if not OVER:
             OVER = collide(p1, rand1, obstacle_x)
         if not OVER:
@@ -157,18 +208,22 @@ def main_loop():
         if not OVER:
             OVER = collide(p1, rand4, obstacle_x3)'''
 
-        if obstacle_x < 0:
-            obstacle_x = 800
-            rand1 = ob.random()
-        if obstacle_x1 < 0:
-            obstacle_x1 = 800
-            rand2 = ob.random()
-        if obstacle_x2 < 0:
-            obstacle_x2 = 800
-            rand3 = ob.random()
-        if obstacle_x3 < 0:
-            obstacle_x3 = 800
-            rand4 = ob.random()
+        if obstacle_x1 < -30:  # obstacle DESTROYER!!!
+            obstacle_x1 = give_block_dist(rand4)
+            rand1 = ob.random(ran=rand4)
+            Score += 1
+        if obstacle_x2 < -30:
+            obstacle_x2 = give_block_dist(rand1)
+            rand2 = ob.random(ran=rand1)
+            Score += 1
+        if obstacle_x3 < -30:
+            obstacle_x3 = give_block_dist(rand2)
+            rand3 = ob.random(ran=rand2)
+            Score += 1
+        if obstacle_x4 < -30:
+            obstacle_x4 = give_block_dist(rand3)
+            rand4 = ob.random(ran=rand3)
+            Score += 1
 
         clock.tick_busy_loop(FPS)
         pg.display.update()
@@ -185,3 +240,38 @@ while True:
         break
 pg.quit()
 quit()
+
+
+def run(config_file):
+    """
+    runs the NEAT algorithm to train a neural network to play flappy bird.
+    :param config_file: location of config file
+    :return: None
+    """
+    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                                neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                                config_file)
+
+    # Create the population, which is the top-level object for a NEAT run.
+    p = neat.Population(config)
+
+    # Add a stdout reporter to show progress in the terminal.
+    p.add_reporter(neat.StdOutReporter(True))
+    stats = neat.StatisticsReporter()
+    p.add_reporter(stats)
+    # p.add_reporter(neat.Checkpointer(5))
+
+    # Run for up to 50 generations.
+    winner = p.run(main_loop, 50)
+
+    # show final stats
+    print('\nBest genome:\n{!s}'.format(winner))
+
+
+if __name__ == '__main__':
+    # Determine path to configuration file. This path manipulation is
+    # here so that the script will run successfully regardless of the
+    # current working directory.
+    local_dir = os.path.dirname(__file__)
+    config_path = os.path.join(local_dir, 'neat-config.txt')
+    run(config_path)
